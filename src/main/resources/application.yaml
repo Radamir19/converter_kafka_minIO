@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: converter-service
+  datasource:
+    url: jdbc:postgresql://localhost:5434/converter
+    username: postgres
+    password: postgres
+  kafka:
+    bootstrap-servers: localhost:9092, localhost:9094, localhost:9096
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+server:
+  port:
+    8080
