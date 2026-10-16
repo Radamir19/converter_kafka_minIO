@@ -1,0 +1,1 @@
+# converter_kafka_minIO
