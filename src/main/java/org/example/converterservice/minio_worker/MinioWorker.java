@@ -32,29 +32,4 @@ public class MinioWorker {
                         .object(key)
                         .build());
     }
-
-    public List<String> listKeys(String bucket, String prefix) throws Exception {
-        List<String> keys = new ArrayList<>();
-        Iterable<Result<Item>> results = minioClient.listObjects(
-                ListObjectsArgs.builder()
-                        .bucket(bucket)
-                        .prefix(prefix)
-                        .recursive(true)
-                        .build()
-        );
-        for(Result<Item> result : results) {
-            Item item = result.get();
-            if(!item.isDir()) {
-                keys.add(item.objectName());
-            }
-        }
-        return keys;
-    }
-
-    public void delete(String key, String bucket) throws Exception {
-        minioClient.removeObject(RemoveObjectArgs.builder()
-                        .bucket(bucket)
-                        .object(key)
-                .build());
-    }
 }

@@ -16,6 +16,6 @@ public class FileNames {
         if(name == null) {
             return "";
         }
-        return name.substring(0, name.lastIndexOf('.')).toLowerCase();
+        return name.substring(name.lastIndexOf('/') + 1, name.lastIndexOf('.')).toLowerCase();
     }
 }
