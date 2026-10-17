@@ -19,7 +19,7 @@ public class TxtConverter implements ConverterStrategy{
         try(PdfWriter writer = new PdfWriter(outputStream);
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf)) {
-            byte[] fontBytes = getClass().getResourceAsStream("/fonts/DejaVuSans.ttf").readAllBytes();
+            byte[] fontBytes = getClass().getResourceAsStream("/font/DejaVuSans.ttf").readAllBytes();
             document.setFont(PdfFontFactory.createFont(fontBytes, PdfEncodings.IDENTITY_H));
             BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
             String line;
