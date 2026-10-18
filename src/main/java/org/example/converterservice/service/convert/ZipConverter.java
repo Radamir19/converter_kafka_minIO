@@ -1,6 +1,7 @@
-package org.example.converterservice.convert;
+package org.example.converterservice.service.convert;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.converterservice.service.util.FileNames;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
@@ -50,6 +51,7 @@ public class ZipConverter implements ConverterStrategy{
                     count++;
                 } catch (Exception e) {
                     log.warn("Не удалось сконвертировать {}: {}", name, e.getMessage());
+                    throw new RuntimeException("Не удалось сконвертировать " + name);
                 }
             }
             if(count == 0) {

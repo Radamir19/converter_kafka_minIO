@@ -1,4 +1,4 @@
-package org.example.converterservice.convert;
+package org.example.converterservice.service.util;
 
 import org.springframework.stereotype.Component;
 

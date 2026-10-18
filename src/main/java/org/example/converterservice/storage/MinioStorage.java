@@ -1,18 +1,15 @@
-package org.example.converterservice.minio_worker;
+package org.example.converterservice.storage;
 
 import io.minio.*;
-import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class MinioWorker {
+public class MinioStorage {
     private final MinioClient minioClient;
 
     public void upload(byte[] data, String key, String bucketName, String contentType) throws Exception {

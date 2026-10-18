@@ -34,3 +34,5 @@ build/
 
 ### MinIO (S3) data ###
 minio-data/
+
+.env

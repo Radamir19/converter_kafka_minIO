@@ -1,4 +1,4 @@
-package org.example.converterservice.convert;
+package org.example.converterservice.service.convert;
 
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFontFactory;

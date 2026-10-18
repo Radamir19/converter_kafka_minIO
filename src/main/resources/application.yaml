@@ -1,23 +1,31 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: converter-service
   datasource:
-    url: jdbc:postgresql://localhost:5434/converter
-    username: postgres
-    password: postgres
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   kafka:
-    bootstrap-servers: localhost:9092, localhost:9094, localhost:9096
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
       properties:
         spring.json.add.type.headers: false
     consumer:
+      group-id: ${KAFKA_GROUP_ID:converter-service}
       auto-offset-reset: earliest
+app:
+  kafka:
+    topics:
+      receive: ${KAFKA_RECEIVE_TOPIC:receive_topic}
+      converted: ${KAFKA_CONVERTED_TOPIC:file-created}
 minio:
-  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
-  access-key: ${MINIO_ACCESS_KEY:minioadmin}
-  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  endpoint: ${MINIO_ENDPOINT}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
 server:
   port:
     8080

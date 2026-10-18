@@ -5,6 +5,8 @@ import org.apache.kafka.common.config.TopicConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
 public class KafkaConfig {
@@ -16,5 +18,12 @@ public class KafkaConfig {
                 .replicas(3)
                 .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
                 .build();
+    }
+
+    @Bean
+    public DefaultErrorHandler kafkaErrorHandler() {
+        DefaultErrorHandler handler = new DefaultErrorHandler(new FixedBackOff(1000L, 3));
+        handler.addNotRetryableExceptions(IllegalArgumentException.class);
+        return handler;
     }
 }

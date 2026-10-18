@@ -1,14 +1,15 @@
 package org.example.converterservice.config;
 
-import org.example.converterservice.convert.ConverterStrategy;
+import org.example.converterservice.service.convert.ConverterStrategy;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Component
+@Configuration
 public class ConvertersConfig {
     @Bean
     public Map<String, ConverterStrategy> converters(List<ConverterStrategy> all) {

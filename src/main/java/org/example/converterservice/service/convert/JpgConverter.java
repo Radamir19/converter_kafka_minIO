@@ -1,4 +1,4 @@
-package org.example.converterservice.convert;
+package org.example.converterservice.service.convert;
 
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.geom.PageSize;
@@ -15,7 +15,7 @@ import java.io.InputStream;
 
 @Component
 @RequiredArgsConstructor
-public class PngConverter implements ConverterStrategy{
+public class JpgConverter implements ConverterStrategy{
     @Override
     public byte[] convert(InputStream input) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -35,7 +35,7 @@ public class PngConverter implements ConverterStrategy{
 
     @Override
     public String extension() {
-        return "png";
+        return "jpg";
     }
 
     @Override
