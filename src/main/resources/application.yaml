@@ -22,6 +22,9 @@ app:
     topics:
       receive: ${KAFKA_RECEIVE_TOPIC:receive_topic}
       converted: ${KAFKA_CONVERTED_TOPIC:file-created}
+  outbox:
+    max-attempts: ${OUTBOX_MAX_ATTEMPTS:5}
+
 minio:
   endpoint: ${MINIO_ENDPOINT}
   access-key: ${MINIO_ACCESS_KEY}

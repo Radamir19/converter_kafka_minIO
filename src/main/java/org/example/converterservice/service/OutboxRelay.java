@@ -12,39 +12,43 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class OutboxRelay {
-    private final OutboxRepository outboxRepository;
+    private final OutboxService outboxService;
     private final KafkaTemplate<String, FileConvertedEvent> template;
     private final ObjectMapper objectMapper;
 
     @Value("${app.kafka.topics.converted}")
     private String convertedTopic;
+    @Value("${app.outbox.max-attempts}")
+    private Short maxAttempts;
 
     @Scheduled(fixedDelay = 1000)
     public void publishPending() {
-        List<OutboxEntity> batch = outboxRepository.findTop10ByPublishedAtIsNullOrderByCreatedAtAsc();
+        List<OutboxEntity> batch = outboxService.findTop10ByStatusOrderByCreatedAtAsc();
 
-        for(OutboxEntity outbox : batch) {
-            try {
-                FileConvertedEvent event = objectMapper.readValue(outbox.getPayload(), FileConvertedEvent.class);
-                template.send(convertedTopic, event)
-                        .get(10, TimeUnit.SECONDS);
-                outbox.setPublishedAt(Instant.now().atOffset(ZoneOffset.UTC));
-                outboxRepository.save(outbox);
-            } catch (Exception e) {
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                }
-                log.warn("Outbox send failed, retry on next tick: {}", e.getMessage());
-                break;
+        for (OutboxEntity outbox : batch) {
+            UUID id = outbox.getId();
+            if (outboxService.sending(id)) {
+                continue;
             }
+            FileConvertedEvent event = objectMapper.readValue(outbox.getPayload(), FileConvertedEvent.class);
+
+            template.send(convertedTopic, outbox.getAggregate(), event)
+                    .whenComplete((result, ex) -> {
+                        if (ex == null) {
+                            outboxService.update(id);
+                        } else {
+                            outboxService.release(id, maxAttempts);
+                            log.warn("Событие {} не отправлено, повтор на следующем тике", id, ex);
+                        }
+                    });
         }
     }
 }

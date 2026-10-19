@@ -33,4 +33,8 @@ public class OutboxEntity {
     private OffsetDateTime createdAt;
 
     private OffsetDateTime publishedAt;
+
+    @Column(nullable = false)
+    private String status;
+
 }

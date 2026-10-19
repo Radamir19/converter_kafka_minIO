@@ -25,6 +25,9 @@ public class InboxEntity {
     @Column(nullable = false)
     private OffsetDateTime processedAt;
 
+    @Column(nullable = false)
+    private String status;
+
     public InboxEntity(UUID eventId) {
         this.eventId = eventId;
     }

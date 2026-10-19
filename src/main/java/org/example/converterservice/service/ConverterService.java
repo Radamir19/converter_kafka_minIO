@@ -1,5 +1,6 @@
 package org.example.converterservice.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.converterservice.service.convert.ConverterStrategy;
 import org.example.converterservice.service.util.FileNames;
 import org.example.converterservice.storage.MinioStorage;
@@ -12,32 +13,48 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class ConverterService {
     private final Map<String, ConverterStrategy> strategies;
     private final MinioStorage worker;
-    private final OutboxInboxService outboxService;
+    private final OutboxService outboxService;
+    private final InboxService inboxService;
 
     public ConverterService(@Qualifier("converters") Map<String, ConverterStrategy> strategies,
                             MinioStorage worker,
-                            OutboxInboxService outboxService) {
+                            OutboxService outboxService,
+                            InboxService inboxService) {
         this.strategies = strategies;
         this.worker = worker;
         this.outboxService = outboxService;
+        this.inboxService = inboxService;
     }
 
 
     public void convertFile(UUID eventId, String key, String bucket) throws Exception {
-        String extension = FileNames.extensionOf(key);
-        ConverterStrategy strategy = strategies.get(extension);
-        if(strategy == null) {
-            throw new IllegalArgumentException("Формат не поддерживается: " + extension);
+        if(!inboxService.claim(eventId)) {
+            log.info("Событие {} уже обработано или обрабатывается", eventId);
+            return;
         }
-        try(InputStream inputStream = worker.download(key, bucket)) {
-            byte[] result = strategy.convert(inputStream);
-            String resultKey = "converted/" + FileNames.withoutExtension(key) + "." + strategy.outputExtension();
-            worker.upload(result, resultKey, bucket, strategy.outputContentType());
-            FileConvertedEvent event = new FileConvertedEvent(key, resultKey, bucket);
-            outboxService.create(eventId, event);
+        try {
+            String extension = FileNames.extensionOf(key);
+            ConverterStrategy strategy = strategies.get(extension);
+            if (strategy == null) {
+                throw new IllegalArgumentException("Формат не поддерживается: " + extension);
+            }
+            try (InputStream inputStream = worker.download(key, bucket)) {
+                byte[] result = strategy.convert(inputStream);
+                String resultKey = "converted/" + eventId + "/" + FileNames.withoutExtension(key) + "." + strategy.outputExtension();
+                worker.upload(result, resultKey, bucket, strategy.outputContentType());
+                FileConvertedEvent event = new FileConvertedEvent(key, resultKey, bucket);
+                outboxService.create(eventId, event);
+            }
+        } catch (IllegalArgumentException e) {
+            inboxService.markError(eventId);
+            throw e;
+        } catch (Exception e) {
+            inboxService.release(eventId);
+            throw e;
         }
     }
 }
