@@ -16,13 +16,15 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
+
 @Configuration
 @Slf4j
 public class KafkaConfig {
 
     @Bean
-    public NewTopic fileCreatedTopic() {
-        return TopicBuilder.name("file-created")
+    public NewTopic fileCreatedTopic(@Value("${app.kafka.topics.converted}") String name) {
+        return TopicBuilder.name(name)
                 .partitions(3)
                 .replicas(3)
                 .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
@@ -47,7 +49,7 @@ public class KafkaConfig {
             try{
                 FileUploadedEvent event = objectMapper.readValue((String) record.value(), FileUploadedEvent.class);
                 if(event.eventId() != null) {
-                    service.markError(event.eventId());
+                    service.updateStatus(event.eventId(), List.of("RECEIVED", "IN_PROCESS"), "ERROR");
                 }
             } catch (Exception e) {
                 log.error("Не удалось пометить событие как ERROR", e);

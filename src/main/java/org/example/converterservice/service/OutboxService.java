@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.converterservice.messaging.event.FileConvertedEvent;
 import org.example.converterservice.model.OutboxEntity;
 import org.example.converterservice.repository.OutboxRepository;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -16,7 +17,7 @@ import java.util.UUID;
 public class OutboxService {
     private final OutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
-    private final InboxService service;
+    private final InboxService inboxService;
 
     @Transactional
     public void create(UUID eventId, FileConvertedEvent event) {
@@ -24,26 +25,19 @@ public class OutboxService {
         outbox.setId(UUID.randomUUID());
         outbox.setAggregate(event.sourceKey());
         outbox.setPayload(objectMapper.writeValueAsString(event));
-        service.success(eventId);
+        outbox.setStatus("NEW");
+        inboxService.updateStatus(eventId, List.of("IN_PROCESS"), "PROCESSEd");
         outboxRepository.save(outbox);
     }
 
-    public List<OutboxEntity> findTop10ByStatusOrderByCreatedAtAsc() {
-        return outboxRepository.findTop10ByStatusOrderByCreatedAtAsc("NEW");
-    }
     @Transactional
-    public boolean sending(UUID id) {
-        return outboxRepository.trySend(id) == 1;
+    public List<OutboxEntity> claimBatch() {
+        return outboxRepository.claimBatch();
     }
 
     @Transactional
-    public void update(UUID id) {
-        outboxRepository.tryUpdate(id);
+    public void finishBatch(List<UUID> sentIds, List<UUID> failedIds, Short maxAttempts) {
+        outboxRepository.markSent(sentIds);
+        outboxRepository.markFailed(failedIds, maxAttempts);
     }
-
-    @Transactional
-    public void release(UUID id, Short maxAttempts) {
-        outboxRepository.markFailed(id, maxAttempts);
-    }
-
 }

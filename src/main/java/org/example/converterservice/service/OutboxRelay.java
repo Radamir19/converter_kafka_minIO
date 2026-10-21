@@ -4,17 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.converterservice.messaging.event.FileConvertedEvent;
 import org.example.converterservice.model.OutboxEntity;
-import org.example.converterservice.repository.OutboxRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -31,24 +29,31 @@ public class OutboxRelay {
 
     @Scheduled(fixedDelay = 1000)
     public void publishPending() {
-        List<OutboxEntity> batch = outboxService.findTop10ByStatusOrderByCreatedAtAsc();
-
+        List<OutboxEntity> batch = outboxService.claimBatch();
+        List<UUID> sentIds = new ArrayList<>();
+        List<UUID> failedIds = new ArrayList<>();
+        Map<UUID, CompletableFuture<?>> pending = new HashMap<>();
         for (OutboxEntity outbox : batch) {
-            UUID id = outbox.getId();
-            if (outboxService.sending(id)) {
-                continue;
+            try {
+                FileConvertedEvent event = objectMapper.readValue(outbox.getPayload(), FileConvertedEvent.class);
+                pending.put(outbox.getId(), template.send(convertedTopic, outbox.getAggregate(), event));
+            } catch (Exception e) {
+                failedIds.add(outbox.getId());
+                log.warn("Не удалось отправить {}", outbox.getId(), e);
             }
-            FileConvertedEvent event = objectMapper.readValue(outbox.getPayload(), FileConvertedEvent.class);
-
-            template.send(convertedTopic, outbox.getAggregate(), event)
-                    .whenComplete((result, ex) -> {
-                        if (ex == null) {
-                            outboxService.update(id);
-                        } else {
-                            outboxService.release(id, maxAttempts);
-                            log.warn("Событие {} не отправлено, повтор на следующем тике", id, ex);
-                        }
-                    });
         }
+
+        for (Map.Entry<UUID, CompletableFuture<?>> entry : pending.entrySet()) {
+            try {
+                entry.getValue().get(10, TimeUnit.SECONDS);
+                sentIds.add(entry.getKey());
+            } catch (Exception e) {
+                failedIds.add(entry.getKey());
+                log.warn("Событие {} не отправлено, повтор на следующем тике", entry.getKey(), e);
+            }
+        }
+
+        outboxService.finishBatch(sentIds, failedIds, maxAttempts);
+
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,6 +20,7 @@ public class ConverterService {
     private final MinioStorage worker;
     private final OutboxService outboxService;
     private final InboxService inboxService;
+
 
     public ConverterService(@Qualifier("converters") Map<String, ConverterStrategy> strategies,
                             MinioStorage worker,
@@ -32,7 +34,7 @@ public class ConverterService {
 
 
     public void convertFile(UUID eventId, String key, String bucket) throws Exception {
-        if(!inboxService.claim(eventId)) {
+        if(!inboxService.claim(eventId, List.of("RECEIVED"), "IN_PROCESS")) {
             log.info("Событие {} уже обработано или обрабатывается", eventId);
             return;
         }
@@ -50,10 +52,10 @@ public class ConverterService {
                 outboxService.create(eventId, event);
             }
         } catch (IllegalArgumentException e) {
-            inboxService.markError(eventId);
+            inboxService.updateStatus(eventId, List.of("RECEIVED", "IN_PROCESS"), "ERROR");
             throw e;
         } catch (Exception e) {
-            inboxService.release(eventId);
+            inboxService.updateStatus(eventId, List.of("IN_PROCESS"), "RECEIVED");
             throw e;
         }
     }

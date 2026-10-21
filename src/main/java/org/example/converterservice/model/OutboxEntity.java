@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -36,5 +37,8 @@ public class OutboxEntity {
 
     @Column(nullable = false)
     private String status;
+
+    @Column(nullable = false)
+    private Short attempts = 0;
 
 }
