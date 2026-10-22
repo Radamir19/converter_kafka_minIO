@@ -24,9 +24,6 @@ public class FileReceiveListener {
         if(event.eventId() == null) {
             throw new IllegalArgumentException("Id события не передали, поэтому файл не конвертируется");
         }
-        if(inboxRepository.existsById(event.eventId())) {
-            return;
-        }
         log.info("Получено {}/{}", event.bucket(), event.key());
         service.convertFile(event.eventId(), event.key(), event.bucket());
     }

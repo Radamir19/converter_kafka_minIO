@@ -3,6 +3,8 @@ package org.example.converterservice.service;
 import lombok.RequiredArgsConstructor;
 import org.example.converterservice.messaging.event.FileConvertedEvent;
 import org.example.converterservice.model.OutboxEntity;
+import org.example.converterservice.model.status.InboxStatus;
+import org.example.converterservice.model.status.OutboxStatus;
 import org.example.converterservice.repository.OutboxRepository;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
@@ -25,14 +27,14 @@ public class OutboxService {
         outbox.setId(UUID.randomUUID());
         outbox.setAggregate(event.sourceKey());
         outbox.setPayload(objectMapper.writeValueAsString(event));
-        outbox.setStatus("NEW");
-        inboxService.updateStatus(eventId, List.of("IN_PROCESS"), "PROCESSEd");
+        outbox.setStatus(OutboxStatus.NEW.name());
+        inboxService.updateStatus(eventId, List.of(InboxStatus.IN_PROCESS.name()), InboxStatus.PROCESSED.name());
         outboxRepository.save(outbox);
     }
 
     @Transactional
-    public List<OutboxEntity> claimBatch() {
-        return outboxRepository.claimBatch();
+    public List<OutboxEntity> claimBatch(int limit) {
+        return outboxRepository.claimBatch(limit);
     }
 
     @Transactional

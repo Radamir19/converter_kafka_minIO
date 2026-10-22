@@ -1,6 +1,7 @@
 package org.example.converterservice.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.converterservice.model.status.InboxStatus;
 import org.example.converterservice.service.convert.ConverterStrategy;
 import org.example.converterservice.service.util.FileNames;
 import org.example.converterservice.storage.MinioStorage;
@@ -52,11 +53,9 @@ public class ConverterService {
                 outboxService.create(eventId, event);
             }
         } catch (IllegalArgumentException e) {
-            inboxService.updateStatus(eventId, List.of("RECEIVED", "IN_PROCESS"), "ERROR");
-            throw e;
+            inboxService.updateStatus(eventId, List.of(InboxStatus.IN_PROCESS.name(), InboxStatus.RECEIVED.name()), InboxStatus.ERROR.name());
         } catch (Exception e) {
-            inboxService.updateStatus(eventId, List.of("IN_PROCESS"), "RECEIVED");
-            throw e;
+            inboxService.updateStatus(eventId, List.of(InboxStatus.IN_PROCESS.name()), InboxStatus.RECEIVED.name());
         }
     }
 }

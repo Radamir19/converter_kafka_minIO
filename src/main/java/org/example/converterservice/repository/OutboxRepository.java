@@ -15,9 +15,9 @@ import java.util.UUID;
 @Repository
 public interface OutboxRepository extends JpaRepository<OutboxEntity, UUID> {
 
-    @Query(value = "UPDATE outbox SET status = 'SENDING' WHERE id IN(SELECT id FROM outbox WHERE status = 'NEW' ORDER BY created_at LIMIT 10 FOR UPDATE SKIP LOCKED) RETURNING *",
+    @Query(value = "UPDATE outbox SET status = 'SENDING' WHERE id IN(SELECT id FROM outbox WHERE status = 'NEW' ORDER BY created_at LIMIT :limit FOR UPDATE SKIP LOCKED) RETURNING *",
             nativeQuery = true)
-    List<OutboxEntity> claimBatch();
+    List<OutboxEntity> claimBatch(@Param("limit") int limit);
 
     @Modifying
     @Query(value = "UPDATE outbox SET attempts = attempts + 1, status = CASE WHEN attempts + 1 >= :max THEN 'ERROR' ELSE 'NEW' END WHERE id IN (:ids) AND status = 'SENDING'", nativeQuery = true)

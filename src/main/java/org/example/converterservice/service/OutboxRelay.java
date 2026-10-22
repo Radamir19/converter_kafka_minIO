@@ -29,7 +29,7 @@ public class OutboxRelay {
 
     @Scheduled(fixedDelay = 1000)
     public void publishPending() {
-        List<OutboxEntity> batch = outboxService.claimBatch();
+        List<OutboxEntity> batch = outboxService.claimBatch(10);
         List<UUID> sentIds = new ArrayList<>();
         List<UUID> failedIds = new ArrayList<>();
         Map<UUID, CompletableFuture<?>> pending = new HashMap<>();
