@@ -6,7 +6,6 @@ import org.example.converterservice.model.OutboxEntity;
 import org.example.converterservice.model.status.InboxStatus;
 import org.example.converterservice.model.status.OutboxStatus;
 import org.example.converterservice.repository.OutboxRepository;
-import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
