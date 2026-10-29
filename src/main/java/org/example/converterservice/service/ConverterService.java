@@ -54,8 +54,10 @@ public class ConverterService {
             }
         } catch (IllegalArgumentException e) {
             inboxService.updateStatus(eventId, List.of(InboxStatus.IN_PROCESS.name(), InboxStatus.RECEIVED.name()), InboxStatus.ERROR.name());
+            throw e;
         } catch (Exception e) {
             inboxService.updateStatus(eventId, List.of(InboxStatus.IN_PROCESS.name()), InboxStatus.RECEIVED.name());
+            throw e;
         }
     }
 }

@@ -2,6 +2,7 @@ package org.example.converterservice.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.TopicConfig;
 import org.example.converterservice.messaging.event.FileUploadedEvent;
 import org.example.converterservice.service.InboxService;
@@ -43,7 +44,8 @@ public class KafkaConfig {
     public DefaultErrorHandler kafkaErrorHandler(KafkaTemplate<Object, Object> template,
                                                  InboxService service,
                                                  ObjectMapper objectMapper) {
-        DeadLetterPublishingRecoverer dlq = new DeadLetterPublishingRecoverer(template);
+        DeadLetterPublishingRecoverer dlq = new DeadLetterPublishingRecoverer(template,
+                (record, ex) -> new TopicPartition(record.topic() + ".DLT", record.partition()));
         ConsumerRecordRecoverer recoverer = (record, ex) -> {
             dlq.accept(record, ex);
             try{
@@ -56,6 +58,7 @@ public class KafkaConfig {
             }
         };
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
+        handler.addNotRetryableExceptions(IllegalArgumentException.class);
         return handler;
     }
 }

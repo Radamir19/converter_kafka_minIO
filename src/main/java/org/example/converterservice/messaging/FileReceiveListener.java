@@ -16,7 +16,6 @@ import tools.jackson.databind.ObjectMapper;
 public class FileReceiveListener {
     private final ConverterService service;
     private final ObjectMapper objectMapper;
-    private final InboxRepository inboxRepository;
 
     @KafkaListener(topics = "${app.kafka.topics.receive}")
     public void onMessage(String message) throws Exception {

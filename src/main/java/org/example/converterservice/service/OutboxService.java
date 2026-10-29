@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class OutboxService {
+public class  OutboxService {
     private final OutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
     private final InboxService inboxService;

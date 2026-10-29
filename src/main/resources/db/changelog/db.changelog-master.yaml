@@ -1,4 +1,4 @@
 databaseChangeLog:
   - includeAll:
       path: db/changelog/changes
-      resourceComparator: com.example.converterservice.NumberComparator
+      resourceComparator: com.example.converterservice.config.NumberComparator
