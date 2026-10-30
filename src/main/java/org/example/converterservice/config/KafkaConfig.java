@@ -5,6 +5,7 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.TopicConfig;
 import org.example.converterservice.messaging.event.FileUploadedEvent;
+import org.example.converterservice.model.status.InboxStatus;
 import org.example.converterservice.service.InboxService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -51,7 +52,7 @@ public class KafkaConfig {
             try{
                 FileUploadedEvent event = objectMapper.readValue((String) record.value(), FileUploadedEvent.class);
                 if(event.eventId() != null) {
-                    service.updateStatus(event.eventId(), List.of("RECEIVED", "IN_PROCESS"), "ERROR");
+                    service.updateStatus(event.eventId(), List.of(InboxStatus.RECEIVED.name(), InboxStatus.IN_PROCESS.name()), InboxStatus.ERROR.name());
                 }
             } catch (Exception e) {
                 log.error("Не удалось пометить событие как ERROR", e);
