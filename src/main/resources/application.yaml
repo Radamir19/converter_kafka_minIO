@@ -1,0 +1,42 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: converter-service
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: ${KAFKA_GROUP_ID}
+      auto-offset-reset: latest
+app:
+  kafka:
+    topics:
+      receive: ${KAFKA_RECEIVE_TOPIC}
+      converted: ${KAFKA_CONVERTED_TOPIC}
+  outbox:
+    max-attempts: 5
+  inbox:
+    timeoutMinutes: 5
+
+minio:
+  endpoint: ${MINIO_ENDPOINT}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+server:
+  port:
+    8080
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    instance:
+      instance-id: ${spring.application.name}:${server.port}
